@@ -1,5 +1,6 @@
 package it.lbsoftware.demo;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,8 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 class GreetingController {
 
   /**
-   * This is a GET endpoint, hence the @GetMapping annotation. It returns a String, so that string
-   * will be written to the response body. The method name is greetMe, but we won't be calling it
+   * This is a GET endpoint, hence the @GetMapping annotation. It returns a ResponseEntity of type
+   * MessageOutput; that string will be written to the response body as JSON and the structure of
+   * that JSON will be composed of a key "message" (the String field name of the type MessageOutput)
+   * and the message we will associate to it. The method name is greetMe, but we won't be calling it
    * directly because Spring Boot will automatically bind the appropriate request to call it. The
    * method takes a single parameter, a String whose name is name, and that happens to also be the
    * name of the Java parameter we want to assign it to; no validation is made for us a part from
@@ -27,10 +30,10 @@ class GreetingController {
    * a personalized greeting is returned instead.
    */
   @GetMapping
-  public String greetMe(@RequestParam("name") final String name) {
+  public ResponseEntity<MessageOutput> greetMe(@RequestParam("name") final String name) {
     if (name == null || name.isBlank()) {
-      return "No name provided, who are you?";
+      return ResponseEntity.badRequest().body(new MessageOutput("No name provided, who are you?"));
     }
-    return "Hello, %s!".formatted(name);
+    return ResponseEntity.ok().body(new MessageOutput("Hello, %s!".formatted(name)));
   }
 }
