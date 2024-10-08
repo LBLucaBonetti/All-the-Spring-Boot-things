@@ -30,7 +30,7 @@ class UserControllerTests {
   /**
    * We are no longer mocking the dependency: this is the real Spring Data JPA repository
    * abstraction that we can use to interact with the DBMS. With the imported
-   * TestcontainersConfiguration, we are also be sure to spin up a container with the real database
+   * TestcontainersConfiguration, we are also sure to spin up a container with the real database
    * itself. The @Autowired annotation tells Spring that we need this dependency when running this
    * test class.
    */
