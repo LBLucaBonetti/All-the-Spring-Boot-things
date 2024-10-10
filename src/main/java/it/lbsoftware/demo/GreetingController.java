@@ -1,5 +1,6 @@
 package it.lbsoftware.demo;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +19,23 @@ import org.springframework.web.bind.annotation.RestController;
 class GreetingController {
 
   /**
+   * The ChatClient is the main Spring AI interface that deals with different AI service providers
+   * with a single abstraction.
+   */
+  private final ChatClient chatClient;
+
+  /**
+   * Using constructor injection and Spring IoC implementation, we can simply say "we need a chat
+   * client builder" and it will be instantiated for us. We simply have to say we want to build it,
+   * after having its builder available.
+   */
+  GreetingController(ChatClient.Builder chatClientBuilder) {
+    this.chatClient = chatClientBuilder.build();
+  }
+
+  /**
    * This is a GET endpoint, hence the @GetMapping annotation. It returns a ResponseEntity of type
-   * MessageOutput; that string will be written to the response body as JSON and the structure of
+   * MessageOutput; that string will be written to the response body as JSON, and the structure of
    * that JSON will be composed of a key "message" (the String field name of the type MessageOutput)
    * and the message we will associate to it. The method name is greetMe, but we won't be calling it
    * directly because Spring Boot will automatically bind the appropriate request to call it. The
@@ -34,6 +50,24 @@ class GreetingController {
     if (name == null || name.isBlank()) {
       return ResponseEntity.badRequest().body(new MessageOutput("No name provided, who are you?"));
     }
-    return ResponseEntity.ok().body(new MessageOutput("Hello, %s!".formatted(name)));
+
+    return ResponseEntity.ok().body(new MessageOutput(getGreetingFromLlm(name)));
+  }
+
+  /**
+   * This method simply calls the locally running Ollama instance to get a response from a prompt.
+   * The prompt is personalized to give the LLM an indication of the name the user provided when
+   * calling the greeting API. To install ollama, visit <a href="https://ollama.com/">the Ollama
+   * website</a> and follow the instructions. <code>ollama run llama3.2</code> will run a local LLM
+   * model (llama 3.2) on your local machine. You need to download it and run it for the whole
+   * system to properly run.
+   */
+  private String getGreetingFromLlm(String name) {
+    return chatClient
+        .prompt(
+            "You are a greeter machine. Please provide a peaceful greeting for a person whose name is %s. Only provide that greeting with no quotes"
+                .formatted(name))
+        .call()
+        .content();
   }
 }
